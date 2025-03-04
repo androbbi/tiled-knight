@@ -284,7 +284,13 @@
      <normaloff>:/images/16/help-about.png</normaloff>:/images/16/help-about.png</iconset>
    </property>
    <property name="text">
-    <string>&amp;About Tiled</string>
+    <string>&amp;About Hydra Tiled</string>
+   </property>
+   <property name="iconText">
+    <string>About Hydra Tiled</string>
+   </property>
+   <property name="toolTip">
+    <string>About Hydra Tiled</string>
    </property>
    <property name="menuRole">
     <enum>QAction::AboutRole</enum>

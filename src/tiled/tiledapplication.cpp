@@ -48,7 +48,7 @@ TiledApplication::TiledApplication(int &argc, char **argv)
 #else
     setApplicationName(QLatin1String("tiled"));
 #endif
-    setApplicationDisplayName(QLatin1String("Tiled"));
+	setApplicationDisplayName(QLatin1String("Hydra Tiled"));
     setApplicationVersion(QLatin1String(AS_STRING(TILED_VERSION)));
 
     LanguageManager::instance()->installTranslators();
