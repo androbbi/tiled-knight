@@ -227,6 +227,7 @@ private:
 
     void exportMapAs(MapDocument *mapDocument);
     void exportTilesetAs(TilesetDocument *tilesetDocument);
+	void convertToHydra();
 
     QList<QDockWidget*> allDockWidgets() const;
     QList<QToolBar*> allToolBars() const;

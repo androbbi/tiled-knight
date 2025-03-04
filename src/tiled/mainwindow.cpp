@@ -83,6 +83,7 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QProcess>
 #include <QRegularExpression>
 #include <QShortcut>
 #include <QStandardPaths>
@@ -1162,6 +1163,47 @@ static Document *saveAsDocument(Document *document)
     return document;
 }
 
+void MainWindow::convertToHydra()
+{
+    Document *document = mDocumentManager->currentDocument();
+    if (!document) return;
+
+    const QString currentFileName = document->fileName();
+    // Auto convert Hydra maps
+    if( currentFileName.toStdString( ).find( "hydra" ) != std::string::npos ||
+        currentFileName.toStdString( ).find( "Hydra" ) != std::string::npos )
+    {
+        QString     pypath = QCoreApplication::applicationDirPath( ) + QLatin1String("/convert_hydra.py");
+        QProcess    ConvertProcess;
+        ConvertProcess.start( QLatin1String("python.exe"), { pypath, currentFileName } );
+        bool finished = ConvertProcess.waitForFinished(-1);
+        QString sOut = QString::fromUtf8(ConvertProcess.readAllStandardOutput().data());
+        QString sErr = QString::fromUtf8(ConvertProcess.readAllStandardError().data());
+        QMessageBox MessageBox;
+        MessageBox.setWindowTitle(tr("Hydra Converter"));
+        if (!finished) {
+            MessageBox.setText(tr("Python could not be started! Make sure python.exe is in the PATH"));
+            MessageBox.exec();
+        }
+        switch (ConvertProcess.exitStatus())
+        {
+        case QProcess::NormalExit: break;
+        case QProcess::CrashExit:
+            MessageBox.setText(tr("Crash during conversion!"));
+            MessageBox.exec();
+            break;
+        }
+        int ret = ConvertProcess.exitCode();
+        switch (ret) {
+        case 0:
+            break;
+        default:
+            MessageBox.setText(tr("Conversion failed (ret %1)\n%2\n%3").arg(ret).arg(sOut).arg(sErr));
+            MessageBox.exec();
+        }
+    }
+}
+
 bool MainWindow::saveFile()
 {
     Document *document = mDocumentManager->currentDocument();
@@ -1171,11 +1213,16 @@ bool MainWindow::saveFile()
     document = saveAsDocument(document);
 
     const QString currentFileName = document->fileName();
+	bool result;
 
     if (currentFileName.isEmpty() || !document->writerFormat())
-        return mDocumentManager->saveDocumentAs(document);
+        result = mDocumentManager->saveDocumentAs(document);
     else
-        return mDocumentManager->saveDocument(document, currentFileName);
+        result = mDocumentManager->saveDocument(document, currentFileName);
+
+    convertToHydra();
+
+    return result;
 }
 
 bool MainWindow::saveFileAs()
@@ -1186,7 +1233,11 @@ bool MainWindow::saveFileAs()
 
     document = saveAsDocument(document);
 
-    return mDocumentManager->saveDocumentAs(document);
+	bool result = mDocumentManager->saveDocumentAs(document);
+
+	convertToHydra();
+
+    return result;
 }
 
 static bool isEmbeddedTilesetDocument(Document *document)

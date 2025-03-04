@@ -101,6 +101,10 @@ MapObject *CreateTileObjectTool::createNewMapObject()
     newMapObject->setCell(mCell);
     newMapObject->setSize(tile()->size());
     newMapObject->setRotation(mRotation);
+	
+	// set the name/type automatically when placing a new object
+    newMapObject->setName(tile()->property(QLatin1String("Object.Type")).toString( ));
+    newMapObject->setType(tile()->property(QLatin1String("Object.Type")).toString( ));
     return newMapObject;
 }
 
