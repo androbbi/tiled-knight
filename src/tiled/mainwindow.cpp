@@ -1171,8 +1171,7 @@ void MainWindow::convertToHydra()
 
     const QString currentFileName = document->fileName();
     // Auto convert Hydra maps
-    if( currentFileName.toStdString( ).find( "hydra" ) != std::string::npos ||
-        currentFileName.toStdString( ).find( "Hydra" ) != std::string::npos )
+	if( currentFileName.indexOf( QLatin1String( "Hydra" ), Qt::CaseInsensitive ) >= 0 )
     {
         QString     pypath = QCoreApplication::applicationDirPath( ) + QLatin1String("/convert_hydra.py");
         QProcess    ConvertProcess;
