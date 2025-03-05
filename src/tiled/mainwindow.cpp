@@ -75,6 +75,7 @@
 #include "worlddocument.h"
 #include "worldmanager.h"
 #include "zoomable.h"
+#include "logginginterface.h"
 
 #include <QActionGroup>
 #include <QCloseEvent>
@@ -1179,28 +1180,43 @@ void MainWindow::convertToHydra()
         bool finished = ConvertProcess.waitForFinished(-1);
         QString sOut = QString::fromUtf8(ConvertProcess.readAllStandardOutput().data());
         QString sErr = QString::fromUtf8(ConvertProcess.readAllStandardError().data());
-        QMessageBox MessageBox;
-        MessageBox.setWindowTitle(tr("Hydra Converter"));
-        if (!finished) {
-            MessageBox.setText(tr("Python could not be started! Make sure python.exe is in the PATH"));
-            MessageBox.exec();
-        }
-        switch (ConvertProcess.exitStatus())
-        {
-        case QProcess::NormalExit: break;
-        case QProcess::CrashExit:
-            MessageBox.setText(tr("Crash during conversion!"));
-            MessageBox.exec();
-            break;
-        }
-        int ret = ConvertProcess.exitCode();
-        switch (ret) {
-        case 0:
-            break;
-        default:
-            MessageBox.setText(tr("Conversion failed (ret %1)\n%2\n%3").arg(ret).arg(sOut).arg(sErr));
-            MessageBox.exec();
-        }
+		QString ErrorText;
+
+		if( finished == false )
+		{
+			ErrorText = tr( "Python could not be started! Make sure python.exe is in the PATH" );
+		}
+		if( ErrorText.length( ) == 0 )
+		{
+			switch( ConvertProcess.exitStatus( ) )
+			{
+			case QProcess::CrashExit:
+				ErrorText = tr( "Crash during conversion!" );
+				break;
+			}
+		}
+		if( ErrorText.length( ) == 0 )
+		{
+			int		ret = ConvertProcess.exitCode( );
+			switch( ret )
+			{
+			case 0:
+				break;
+			default:
+				ErrorText = tr( "(ret %1)\n%2\n%3").arg( ret ).arg( sOut ).arg( sErr );
+				break;
+			}
+		}
+
+		QString		CurrentTime = QDateTime::currentDateTime( ).toString( QLatin1String( "[HH:mm:ss] " ) );
+		if( ErrorText.length( ) == 0 )
+		{
+			INFO( tr( "%0 Succesfully saved map file '%1'" ).arg( CurrentTime ).arg( mDocumentManager->currentDocument( )->canonicalFilePath( ) ) );
+		}
+		else
+		{
+			INFO( tr( "%0 Faield to save map file '%1': %2" ).arg( CurrentTime ).arg( mDocumentManager->currentDocument( )->canonicalFilePath( ), ErrorText ) );
+		}
     }
 }
 
