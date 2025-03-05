@@ -1208,14 +1208,14 @@ void MainWindow::convertToHydra()
 			}
 		}
 
-		QString		CurrentTime = QDateTime::currentDateTime( ).toString( QLatin1String( "[HH:mm:ss] " ) );
+		QString		CurrentTime = QDateTime::currentDateTime( ).toString( QLatin1String( "[HH:mm:ss]" ) );
 		if( ErrorText.length( ) == 0 )
 		{
 			INFO( tr( "%0 Succesfully saved map file '%1'" ).arg( CurrentTime ).arg( mDocumentManager->currentDocument( )->canonicalFilePath( ) ) );
 		}
 		else
 		{
-			INFO( tr( "%0 Faield to save map file '%1': %2" ).arg( CurrentTime ).arg( mDocumentManager->currentDocument( )->canonicalFilePath( ), ErrorText ) );
+			INFO( tr( "%0 Failed to save map file '%1': %2" ).arg( CurrentTime ).arg( mDocumentManager->currentDocument( )->canonicalFilePath( ), ErrorText ) );
 		}
     }
 }
