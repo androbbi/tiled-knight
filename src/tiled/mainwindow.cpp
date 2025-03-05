@@ -1169,19 +1169,30 @@ void MainWindow::convertToHydra()
     Document *document = mDocumentManager->currentDocument();
     if (!document) return;
 
-    const QString currentFileName = document->fileName();
+	QString currentFileName = document->fileName();
     // Auto convert Hydra maps
 	if( currentFileName.indexOf( QLatin1String( "Hydra" ), 0, Qt::CaseInsensitive ) >= 0 )
     {
-        QString     pypath = QCoreApplication::applicationDirPath( ) + QLatin1String("/convert_hydra.py");
-        QProcess    ConvertProcess;
-        ConvertProcess.start( QLatin1String("python.exe"), { pypath, currentFileName } );
-        bool finished = ConvertProcess.waitForFinished(-1);
-        QString sOut = QString::fromUtf8(ConvertProcess.readAllStandardOutput().data());
-        QString sErr = QString::fromUtf8(ConvertProcess.readAllStandardError().data());
-		QString ErrorText;
+		QString			PythonToolPath = QCoreApplication::applicationDirPath( ) + QLatin1String( "/convert_hydra.py" );
+		QProcess		ConvertProcess;
+		ConvertProcess.start( QLatin1String( "python.exe" ), { PythonToolPath, QLatin1Char( '\"' ) + currentFileName + QLatin1Char( '\"' ) } );
+		bool			Finished = ConvertProcess.waitForFinished( -1 );
+		QString			StdOut = QString::fromUtf8( ConvertProcess.readAllStandardOutput( ).data( ) );
+		QString			StdError = QString::fromUtf8( ConvertProcess.readAllStandardError( ).data( ) );
+		QString			ErrorText;
+		QStringList		StdOutArray= StdOut.split( QLatin1String( "\r\n" ) );
+		QString			MapPath = QLatin1String( "UNKNOWN MAP" );
+		while( StdOutArray.count( ) )
+		{
+			if( StdOutArray[ StdOutArray.count( ) - 1 ].indexOf( QLatin1String( ".map" ), 0, Qt::CaseInsensitive ) >= 0 )
+			{
+				MapPath = StdOutArray[ StdOutArray.count( ) - 1 ];
+				break;
+			}
+			StdOutArray.removeAt( StdOutArray.count( ) - 1 );
+		}
 
-		if( finished == false )
+		if( Finished == false )
 		{
 			ErrorText = tr( "Python could not be started! Make sure python.exe is in the PATH" );
 		}
@@ -1194,27 +1205,19 @@ void MainWindow::convertToHydra()
 				break;
 			}
 		}
-		if( ErrorText.length( ) == 0 )
+		if( ErrorText.length( ) == 0 && StdError.length( ) > 0 )
 		{
-			int		ret = ConvertProcess.exitCode( );
-			switch( ret )
-			{
-			case 0:
-				break;
-			default:
-				ErrorText = tr( "(ret %1)\n%2\n%3").arg( ret ).arg( sOut ).arg( sErr );
-				break;
-			}
+			ErrorText = StdError;
 		}
 
 		QString		CurrentTime = QDateTime::currentDateTime( ).toString( QLatin1String( "[HH:mm:ss]" ) );
 		if( ErrorText.length( ) == 0 )
 		{
-			INFO( tr( "%0 Succesfully saved map file '%1'" ).arg( CurrentTime ).arg( mDocumentManager->currentDocument( )->canonicalFilePath( ) ) );
+			INFO( tr( "%0 Succesfully saved map file '%1'" ).arg( CurrentTime ).arg( MapPath ) );
 		}
 		else
 		{
-			INFO( tr( "%0 Failed to save map file '%1': %2" ).arg( CurrentTime ).arg( mDocumentManager->currentDocument( )->canonicalFilePath( ), ErrorText ) );
+			INFO( tr( "%0 Failed to save map file: %1" ).arg( CurrentTime ).arg( ErrorText ) );
 		}
     }
 }
